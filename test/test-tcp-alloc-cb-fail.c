@@ -77,7 +77,7 @@ static void connect_cb(uv_connect_t* req, int status) {
 static void connection_cb(uv_stream_t* tcp, int status) {
   ASSERT(status == 0);
 
-  ASSERT(0 == uv_tcp_init(tcp->loop, &incoming));
+  ASSERT(0 == uv_tcp_init(tcp->hndl.loop, &incoming));
   ASSERT(0 == uv_accept(tcp, (uv_stream_t*) &incoming));
   ASSERT(0 == uv_read_start((uv_stream_t*) &incoming,
                             conn_alloc_cb,

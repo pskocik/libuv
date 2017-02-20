@@ -150,7 +150,7 @@ static void helper_timer_cb(uv_timer_t* thandle) {
   uv_fs_t fs_req;
 
   /* fire all fs_events */
-  r = uv_fs_utime(thandle->loop, &fs_req, watched_dir, 0, 0, NULL);
+  r = uv_fs_utime(thandle->hndl.loop, &fs_req, watched_dir, 0, 0, NULL);
   ASSERT(r == 0);
   ASSERT(fs_req.result == 0);
   ASSERT(fs_req.fs_type == UV_FS_UTIME);

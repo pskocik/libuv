@@ -96,7 +96,7 @@ static void pinger_read_cb(uv_stream_t* stream,
   ssize_t i;
   pinger_t* pinger;
 
-  pinger = (pinger_t*)stream->data;
+  pinger = (pinger_t*)stream->hndl.data;
 
   if (nread < 0) {
     ASSERT(nread == UV_EOF);
@@ -133,7 +133,7 @@ static void pinger_read_cb(uv_stream_t* stream,
 
 
 static void pinger_on_connect(uv_connect_t *req, int status) {
-  pinger_t *pinger = (pinger_t*)req->handle->data;
+  pinger_t *pinger = (pinger_t*)req->handle->hndl.data;
 
   pinger_on_connect_count++;
 
@@ -164,7 +164,7 @@ static void tcp_pinger_v6_new(void) {
 
   /* Try to connect to the server and do NUM_PINGS ping-pongs. */
   r = uv_tcp_init(uv_default_loop(), &pinger->stream.tcp);
-  pinger->stream.tcp.data = pinger;
+  pinger->stream.tcp.strm.hndl.data = pinger;
   ASSERT(!r);
 
   /* We are never doing multiple reads/connects at a time anyway. */
@@ -193,7 +193,7 @@ static void tcp_pinger_new(void) {
 
   /* Try to connect to the server and do NUM_PINGS ping-pongs. */
   r = uv_tcp_init(uv_default_loop(), &pinger->stream.tcp);
-  pinger->stream.tcp.data = pinger;
+  pinger->stream.tcp.strm.hndl.data = pinger;
   ASSERT(!r);
 
   /* We are never doing multiple reads/connects at a time anyway. */
@@ -220,7 +220,7 @@ static void pipe_pinger_new(void) {
 
   /* Try to connect to the server and do NUM_PINGS ping-pongs. */
   r = uv_pipe_init(uv_default_loop(), &pinger->stream.pipe, 0);
-  pinger->stream.pipe.data = pinger;
+  pinger->stream.pipe.strm.hndl.data = pinger;
   ASSERT(!r);
 
   /* We are never doing multiple reads/connects at a time anyway. */

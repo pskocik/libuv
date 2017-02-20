@@ -71,7 +71,7 @@ static void on_connection(uv_stream_t* server, int status) {
 
     conn = malloc(sizeof(*conn));
     ASSERT(conn);
-    r = uv_tcp_init(server->loop, conn);
+    r = uv_tcp_init(server->hndl.loop, conn);
     ASSERT(r == 0);
 
     r = uv_accept(server, (uv_stream_t*)conn);
@@ -133,7 +133,7 @@ static void make_many_connections(void) {
                        connect_cb);
     ASSERT(r == 0);
 
-    conn->conn.data = conn;
+    conn->conn.strm.hndl.data = conn;
   }
 }
 
@@ -575,7 +575,7 @@ static void ipc_on_connection(uv_stream_t* server, int status) {
     ASSERT(status == 0);
     ASSERT((uv_stream_t*)&tcp_server == server);
 
-    r = uv_tcp_init(server->loop, &conn.conn);
+    r = uv_tcp_init(server->hndl.loop, &conn.conn);
     ASSERT(r == 0);
 
     r = uv_accept(server, (uv_stream_t*)&conn.conn);
@@ -604,7 +604,7 @@ static void ipc_on_connection_tcp_conn(uv_stream_t* server, int status) {
   conn = malloc(sizeof(*conn));
   ASSERT(conn);
 
-  r = uv_tcp_init(server->loop, conn);
+  r = uv_tcp_init(server->hndl.loop, conn);
   ASSERT(r == 0);
 
   r = uv_accept(server, (uv_stream_t*)conn);

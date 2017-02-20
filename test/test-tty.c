@@ -283,10 +283,10 @@ TEST_IMPL(tty_pty) {
   /* Check if the file descriptor was reopened. If it is,
    * UV_STREAM_BLOCKING (value 0x80) isn't set on flags.
    */
-  ASSERT(0 == (slave_tty.flags & 0x80));
+  ASSERT(0 == (slave_tty.strm.hndl.flags & 0x80));
   /* The master_fd of a pty should never be reopened.
    */
-  ASSERT(master_tty.flags & 0x80);
+  ASSERT(master_tty.strm.hndl.flags & 0x80);
   ASSERT(0 == close(slave_fd));
   uv_close((uv_handle_t*) &slave_tty, NULL);
   ASSERT(0 == close(master_fd));

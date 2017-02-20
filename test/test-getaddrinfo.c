@@ -61,7 +61,7 @@ static void getaddrinfo_cuncurrent_cb(uv_getaddrinfo_t* handle,
                                       int status,
                                       struct addrinfo* res) {
   int i;
-  int* data = (int*)handle->data;
+  int* data = (int*)handle->rq.data;
 
   for (i = 0; i < CONCURRENT_COUNT; i++) {
     if (&getaddrinfo_handles[i] == handle) {
@@ -162,7 +162,7 @@ TEST_IMPL(getaddrinfo_concurrent) {
     data = (int*)malloc(sizeof(int));
     ASSERT(data != NULL);
     *data = i;
-    getaddrinfo_handles[i].data = data;
+    getaddrinfo_handles[i].rq.data = data;
 
     r = uv_getaddrinfo(uv_default_loop(),
                        &getaddrinfo_handles[i],

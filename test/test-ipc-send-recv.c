@@ -117,9 +117,9 @@ static void recv_cb(uv_stream_t* handle,
       ASSERT(pending == ctx.expected_type);
 
       if (pending == UV_NAMED_PIPE)
-        r = uv_pipe_init(ctx.channel.loop, &recv->pipe, 0);
+        r = uv_pipe_init(ctx.channel.strm.hndl.loop, &recv->pipe, 0);
       else if (pending == UV_TCP)
-        r = uv_tcp_init(ctx.channel.loop, &recv->tcp);
+        r = uv_tcp_init(ctx.channel.strm.hndl.loop, &recv->tcp);
       else
         abort();
       ASSERT(r == 0);
@@ -314,9 +314,9 @@ static void read_cb(uv_stream_t* handle,
     ASSERT(pending == UV_NAMED_PIPE || pending == UV_TCP);
 
     if (pending == UV_NAMED_PIPE)
-      r = uv_pipe_init(ctx2.channel.loop, &recv->pipe, 0);
+      r = uv_pipe_init(ctx2.channel.strm.hndl.loop, &recv->pipe, 0);
     else if (pending == UV_TCP)
-      r = uv_tcp_init(ctx2.channel.loop, &recv->tcp);
+      r = uv_tcp_init(ctx2.channel.strm.hndl.loop, &recv->tcp);
     else
       abort();
     ASSERT(r == 0);

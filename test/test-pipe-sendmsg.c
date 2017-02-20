@@ -87,7 +87,7 @@ static void read_cb(uv_stream_t* handle,
 
     ASSERT(incoming_count < ARRAY_SIZE(incoming));
     inc = &incoming[incoming_count++];
-    ASSERT(0 == uv_pipe_init(p->loop, inc, 0));
+    ASSERT(0 == uv_pipe_init(p->strm.hndl.loop, inc, 0));
     ASSERT(0 == uv_accept(handle, (uv_stream_t*) inc));
   }
 

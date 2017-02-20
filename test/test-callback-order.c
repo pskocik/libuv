@@ -47,7 +47,7 @@ static void timer_cb(uv_timer_t* handle) {
 
 
 static void next_tick(uv_idle_t* handle) {
-  uv_loop_t* loop = handle->loop;
+  uv_loop_t* loop = handle->hndl.loop;
   uv_idle_stop(handle);
   uv_idle_init(loop, &idle_handle);
   uv_idle_start(&idle_handle, idle_cb);

@@ -56,7 +56,7 @@ static void do_accept(uv_timer_t* timer_handle) {
   r = uv_tcp_init(uv_default_loop(), accepted_handle);
   ASSERT(r == 0);
 
-  server = (uv_tcp_t*)timer_handle->data;
+  server = (uv_tcp_t*)timer_handle->hndl.data;
   r = uv_accept((uv_stream_t*)server, (uv_stream_t*)accepted_handle);
   ASSERT(r == 0);
 
@@ -88,7 +88,7 @@ static void connection_cb(uv_stream_t* tcp, int status) {
   r = uv_timer_init(uv_default_loop(), timer_handle);
   ASSERT(r == 0);
 
-  timer_handle->data = tcp;
+  timer_handle->hndl.data = tcp;
 
   r = uv_timer_start(timer_handle, do_accept, 1000, 0);
   ASSERT(r == 0);

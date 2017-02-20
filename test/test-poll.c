@@ -159,12 +159,12 @@ static connection_context_t* create_connection_context(
 
   r = uv_poll_init_socket(uv_default_loop(), &context->poll_handle, sock);
   context->open_handles++;
-  context->poll_handle.data = context;
+  context->poll_handle.hndl.data = context;
   ASSERT(r == 0);
 
   r = uv_timer_init(uv_default_loop(), &context->timer_handle);
   context->open_handles++;
-  context->timer_handle.data = context;
+  context->timer_handle.hndl.data = context;
   ASSERT(r == 0);
 
   return context;
@@ -201,7 +201,7 @@ static void destroy_connection_context(connection_context_t* context) {
 
 
 static void connection_poll_cb(uv_poll_t* handle, int status, int events) {
-  connection_context_t* context = (connection_context_t*) handle->data;
+  connection_context_t* context = (connection_context_t*) handle->hndl.data;
   unsigned int new_events;
   int r;
 
@@ -420,7 +420,7 @@ static void connection_poll_cb(uv_poll_t* handle, int status, int events) {
 
 
 static void delay_timer_cb(uv_timer_t* timer) {
-  connection_context_t* context = (connection_context_t*) timer->data;
+  connection_context_t* context = (connection_context_t*) timer->hndl.data;
   int r;
 
   /* Timer should auto stop. */
@@ -450,7 +450,7 @@ static server_context_t* create_server_context(
   context->connections = 0;
 
   r = uv_poll_init_socket(uv_default_loop(), &context->poll_handle, sock);
-  context->poll_handle.data = context;
+  context->poll_handle.hndl.data = context;
   ASSERT(r == 0);
 
   return context;
@@ -470,7 +470,7 @@ static void destroy_server_context(server_context_t* context) {
 
 static void server_poll_cb(uv_poll_t* handle, int status, int events) {
   server_context_t* server_context = (server_context_t*)
-                                          handle->data;
+                                          handle->hndl.data;
   connection_context_t* connection_context;
   struct sockaddr_in addr;
   socklen_t addr_len;

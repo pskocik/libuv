@@ -122,7 +122,7 @@ static void on_connection(uv_stream_t* server, int status) {
   ASSERT(r == 0);
 
   /* associate server with stream */
-  handle->data = server;
+  handle->strm.hndl.data = server;
 
   r = uv_accept(server, (uv_stream_t*)handle);
   ASSERT(r == 0);
@@ -216,7 +216,7 @@ static void tcp_connector(void) {
   ASSERT(0 == uv_ip4_addr("127.0.0.1", server_port, &server_addr));
 
   r = uv_tcp_init(loop, &tcp);
-  tcp.data = &connect_req;
+  tcp.strm.hndl.data = &connect_req;
   ASSERT(!r);
 
   r = uv_tcp_connect(&connect_req,

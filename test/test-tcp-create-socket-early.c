@@ -46,7 +46,7 @@ static void on_connection(uv_stream_t* server, int status) {
   handle = malloc(sizeof(*handle));
   ASSERT(handle != NULL);
 
-  r = uv_tcp_init_ex(server->loop, handle, AF_INET);
+  r = uv_tcp_init_ex(server->hndl.loop, handle, AF_INET);
   ASSERT(r == 0);
 
   r = uv_accept(server, (uv_stream_t*)handle);

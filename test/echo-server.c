@@ -164,7 +164,7 @@ static void on_connection(uv_stream_t* server, int status) {
   }
 
   /* associate server with stream */
-  stream->data = server;
+  stream->hndl.data = server;
 
   r = uv_accept(server, stream);
   ASSERT(r == 0);

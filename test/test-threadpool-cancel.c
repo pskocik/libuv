@@ -171,7 +171,7 @@ static void nop_work_cb(uv_work_t* req) {
 
 
 static void nop_done_cb(uv_work_t* req, int status) {
-  req->data = "OK";
+  req->rq.data = "OK";
 }
 
 
@@ -337,7 +337,7 @@ TEST_IMPL(threadpool_cancel_single) {
 
   loop = uv_default_loop();
   for (i = 0; i < 5000; i++) {
-    req.data = NULL;
+    req.rq.data = NULL;
     ASSERT(0 == uv_queue_work(loop, &req, nop_work_cb, nop_done_cb));
 
     cancelled = uv_cancel((uv_req_t*) &req);
@@ -353,9 +353,9 @@ TEST_IMPL(threadpool_cancel_single) {
     return 1;
   }
 
-  ASSERT(req.data == NULL);
+  ASSERT(req.rq.data == NULL);
   ASSERT(0 == uv_run(loop, UV_RUN_DEFAULT));
-  ASSERT(req.data != NULL);  /* Should have been updated by nop_done_cb(). */
+  ASSERT(req.rq.data != NULL);  /* Should have been updated by nop_done_cb(). */
 
   MAKE_VALGRIND_HAPPY();
   return 0;

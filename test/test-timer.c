@@ -169,12 +169,12 @@ TEST_IMPL(timer_init) {
 
 
 static void order_cb_a(uv_timer_t *handle) {
-  ASSERT(order_cb_called++ == *(int*)handle->data);
+  ASSERT(order_cb_called++ == *(int*)handle->hndl.data);
 }
 
 
 static void order_cb_b(uv_timer_t *handle) {
-  ASSERT(order_cb_called++ == *(int*)handle->data);
+  ASSERT(order_cb_called++ == *(int*)handle->hndl.data);
 }
 
 
@@ -190,9 +190,9 @@ TEST_IMPL(timer_order) {
   ASSERT(0 == uv_timer_init(uv_default_loop(), &handle_b));
 
   /* Test for starting handle_a then handle_b */
-  handle_a.data = &first;
+  handle_a.hndl.data = &first;
   ASSERT(0 == uv_timer_start(&handle_a, order_cb_a, 0, 0));
-  handle_b.data = &second;
+  handle_b.hndl.data = &second;
   ASSERT(0 == uv_timer_start(&handle_b, order_cb_b, 0, 0));
   ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
 
@@ -203,10 +203,10 @@ TEST_IMPL(timer_order) {
 
   /* Test for starting handle_b then handle_a */
   order_cb_called = 0;
-  handle_b.data = &first;
+  handle_b.hndl.data = &first;
   ASSERT(0 == uv_timer_start(&handle_b, order_cb_b, 0, 0));
 
-  handle_a.data = &second;
+  handle_a.hndl.data = &second;
   ASSERT(0 == uv_timer_start(&handle_a, order_cb_a, 0, 0));
   ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
 

@@ -93,7 +93,7 @@ static void read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
   ASSERT(0 == uv_read_stop(stream));
   ASSERT(1 == nread);
 
-  loop = stream->loop;
+  loop = stream->hndl.loop;
   read_cb_called++;
 
   /* Close all active incomings, except current one */
@@ -126,7 +126,7 @@ static void connection_cb(uv_stream_t* server, int status) {
 
   /* Accept everyone */
   incoming = &tcp_incoming[got_connections++];
-  ASSERT(0 == uv_tcp_init(server->loop, incoming));
+  ASSERT(0 == uv_tcp_init(server->hndl.loop, incoming));
   ASSERT(0 == uv_accept(server, (uv_stream_t*) incoming));
 
   if (got_connections != ARRAY_SIZE(tcp_incoming))

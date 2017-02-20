@@ -200,7 +200,7 @@ static void fchmod_cb(uv_fs_t* req) {
   ASSERT(req->result == 0);
   fchmod_cb_count++;
   uv_fs_req_cleanup(req);
-  check_permission("test_file", *(int*)req->data);
+  check_permission("test_file", *(int*)req->rq.data);
 }
 
 
@@ -209,7 +209,7 @@ static void chmod_cb(uv_fs_t* req) {
   ASSERT(req->result == 0);
   chmod_cb_count++;
   uv_fs_req_cleanup(req);
-  check_permission("test_file", *(int*)req->data);
+  check_permission("test_file", *(int*)req->rq.data);
 }
 
 
@@ -665,7 +665,7 @@ static void utime_cb(uv_fs_t* req) {
   ASSERT(req->result == 0);
   ASSERT(req->fs_type == UV_FS_UTIME);
 
-  c = req->data;
+  c = req->rq.data;
   check_utime(c->path, c->atime, c->mtime);
 
   uv_fs_req_cleanup(req);
@@ -680,7 +680,7 @@ static void futime_cb(uv_fs_t* req) {
   ASSERT(req->result == 0);
   ASSERT(req->fs_type == UV_FS_FUTIME);
 
-  c = req->data;
+  c = req->rq.data;
   check_utime(c->path, c->atime, c->mtime);
 
   uv_fs_req_cleanup(req);
@@ -1318,7 +1318,7 @@ TEST_IMPL(fs_chmod) {
   /* async chmod */
   {
     static int mode = 0200;
-    req.data = &mode;
+    req.rq.data = &mode;
   }
   r = uv_fs_chmod(loop, &req, "test_file", 0200, chmod_cb);
   ASSERT(r == 0);
@@ -1330,7 +1330,7 @@ TEST_IMPL(fs_chmod) {
   /* async chmod */
   {
     static int mode = 0400;
-    req.data = &mode;
+    req.rq.data = &mode;
   }
   r = uv_fs_chmod(loop, &req, "test_file", 0400, chmod_cb);
   ASSERT(r == 0);
@@ -1340,7 +1340,7 @@ TEST_IMPL(fs_chmod) {
   /* async fchmod */
   {
     static int mode = 0600;
-    req.data = &mode;
+    req.rq.data = &mode;
   }
   r = uv_fs_fchmod(loop, &req, file, 0600, fchmod_cb);
   ASSERT(r == 0);
@@ -1955,7 +1955,7 @@ TEST_IMPL(fs_utime) {
   checkme.mtime = mtime;
 
   /* async utime */
-  utime_req.data = &checkme;
+  utime_req.rq.data = &checkme;
   r = uv_fs_utime(loop, &utime_req, path, atime, mtime, utime_cb);
   ASSERT(r == 0);
   uv_run(loop, UV_RUN_DEFAULT);
@@ -2058,7 +2058,7 @@ TEST_IMPL(fs_futime) {
   checkme.path = path;
 
   /* async futime */
-  futime_req.data = &checkme;
+  futime_req.rq.data = &checkme;
   r = uv_fs_futime(loop, &futime_req, file, atime, mtime, futime_cb);
   ASSERT(r == 0);
   uv_run(loop, UV_RUN_DEFAULT);

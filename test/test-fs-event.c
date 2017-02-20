@@ -325,7 +325,7 @@ static void timer_cb_close_handle(uv_timer_t* timer) {
   uv_handle_t* handle;
 
   ASSERT(timer != NULL);
-  handle = timer->data;
+  handle = timer->hndl.data;
 
   uv_close((uv_handle_t*)timer, NULL);
   uv_close((uv_handle_t*)handle, close_cb);
@@ -348,8 +348,8 @@ static void fs_event_cb_file_current_dir(uv_fs_event_t* handle,
   /* Regression test for SunOS: touch should generate just one event. */
   {
     static uv_timer_t timer;
-    uv_timer_init(handle->loop, &timer);
-    timer.data = handle;
+    uv_timer_init(handle->hndl.loop, &timer);
+    timer.hndl.data = handle;
     uv_timer_start(&timer, timer_cb_close_handle, 250, 0);
   }
 }
@@ -387,7 +387,7 @@ static void timer_cb_exact(uv_timer_t* handle) {
 }
 
 static void timer_cb_watch_twice(uv_timer_t* handle) {
-  uv_fs_event_t* handles = handle->data;
+  uv_fs_event_t* handles = handle->hndl.data;
   uv_close((uv_handle_t*) (handles + 0), NULL);
   uv_close((uv_handle_t*) (handles + 1), NULL);
   uv_close((uv_handle_t*) handle, NULL);
@@ -570,7 +570,7 @@ TEST_IMPL(fs_event_watch_file_twice) {
   uv_loop_t* loop;
 
   loop = uv_default_loop();
-  timer.data = watchers;
+  timer.hndl.data = watchers;
 
   ASSERT(0 == uv_fs_event_init(loop, watchers + 0));
   ASSERT(0 == uv_fs_event_start(watchers + 0, fail_cb, path, 0));
@@ -736,7 +736,7 @@ TEST_IMPL(fs_event_no_callback_on_close) {
 static void timer_cb(uv_timer_t* handle) {
   int r;
 
-  r = uv_fs_event_init(handle->loop, &fs_event);
+  r = uv_fs_event_init(handle->hndl.loop, &fs_event);
   ASSERT(r == 0);
   r = uv_fs_event_start(&fs_event, fs_event_fail, ".", 0);
   ASSERT(r == 0);

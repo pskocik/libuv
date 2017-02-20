@@ -26,7 +26,7 @@ static uv_timer_t timer_handle;
 
 static void timer_cb(uv_timer_t* handle) {
   ASSERT(handle);
-  uv_stop(handle->loop);
+  uv_stop(handle->hndl.loop);
 }
 
 

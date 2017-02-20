@@ -47,7 +47,7 @@ static void connection_cb(uv_stream_t* server, int status) {
   ASSERT(status == 0);
 
   conn = &connections[connection_cb_called];
-  r = uv_pipe_init(server->loop, conn, 0);
+  r = uv_pipe_init(server->hndl.loop, conn, 0);
   ASSERT(r == 0);
 
   r = uv_accept(server, (uv_stream_t*)conn);
@@ -55,7 +55,7 @@ static void connection_cb(uv_stream_t* server, int status) {
 
   if (++connection_cb_called == NUM_CLIENTS &&
       connect_cb_called == NUM_CLIENTS) {
-    uv_stop(server->loop);
+    uv_stop(server->hndl.loop);
   }
 }
 
@@ -64,7 +64,7 @@ static void connect_cb(uv_connect_t* connect_req, int status) {
   ASSERT(status == 0);
   if (++connect_cb_called == NUM_CLIENTS &&
       connection_cb_called == NUM_CLIENTS) {
-    uv_stop(connect_req->handle->loop);
+    uv_stop(connect_req->handle->hndl.loop);
   }
 }
 

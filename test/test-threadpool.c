@@ -30,7 +30,7 @@ static char data;
 
 static void work_cb(uv_work_t* req) {
   ASSERT(req == &work_req);
-  ASSERT(req->data == &data);
+  ASSERT(req->rq.data == &data);
   work_cb_count++;
 }
 
@@ -38,7 +38,7 @@ static void work_cb(uv_work_t* req) {
 static void after_work_cb(uv_work_t* req, int status) {
   ASSERT(status == 0);
   ASSERT(req == &work_req);
-  ASSERT(req->data == &data);
+  ASSERT(req->rq.data == &data);
   after_work_cb_count++;
 }
 
@@ -46,7 +46,7 @@ static void after_work_cb(uv_work_t* req, int status) {
 TEST_IMPL(threadpool_queue_work_simple) {
   int r;
 
-  work_req.data = &data;
+  work_req.rq.data = &data;
   r = uv_queue_work(uv_default_loop(), &work_req, work_cb, after_work_cb);
   ASSERT(r == 0);
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
@@ -62,7 +62,7 @@ TEST_IMPL(threadpool_queue_work_simple) {
 TEST_IMPL(threadpool_queue_work_einval) {
   int r;
 
-  work_req.data = &data;
+  work_req.rq.data = &data;
   r = uv_queue_work(uv_default_loop(), &work_req, NULL, after_work_cb);
   ASSERT(r == UV_EINVAL);
 
