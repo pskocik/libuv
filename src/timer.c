@@ -68,10 +68,10 @@ int uv_timer_start(uv_timer_t* handle,
   if (cb == NULL)
     return UV_EINVAL;
 
-  if (uv__is_active(handle))
+  if (uv__is_active(&handle->hndl))
     uv_timer_stop(handle);
 
-  clamped_timeout = handle->loop->time + timeout;
+  clamped_timeout = handle->hndl.loop->time + timeout;
   if (clamped_timeout < timeout)
     clamped_timeout = (uint64_t) -1;
 
@@ -79,25 +79,25 @@ int uv_timer_start(uv_timer_t* handle,
   handle->timeout = clamped_timeout;
   handle->repeat = repeat;
   /* start_id is the second index to be compared in uv__timer_cmp() */
-  handle->start_id = handle->loop->timer_counter++;
+  handle->start_id = handle->hndl.loop->timer_counter++;
 
-  heap_insert((struct heap*) &handle->loop->timer_heap,
+  heap_insert((struct heap*) &handle->hndl.loop->timer_heap,
               (struct heap_node*) &handle->heap_node,
               timer_less_than);
-  uv__handle_start(handle);
+  uv__handle_start(&handle->hndl);
 
   return 0;
 }
 
 
 int uv_timer_stop(uv_timer_t* handle) {
-  if (!uv__is_active(handle))
+  if (!uv__is_active(&handle->hndl))
     return 0;
 
-  heap_remove((struct heap*) &handle->loop->timer_heap,
+  heap_remove((struct heap*) &handle->hndl.loop->timer_heap,
               (struct heap_node*) &handle->heap_node,
               timer_less_than);
-  uv__handle_stop(handle);
+  uv__handle_stop(&handle->hndl);
 
   return 0;
 }

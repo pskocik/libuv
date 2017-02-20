@@ -51,7 +51,7 @@ int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
   handle->pending = 0;
 
   QUEUE_INSERT_TAIL(&loop->async_handles, &handle->queue);
-  uv__handle_start(handle);
+  uv__handle_start(&handle->hndl);
 
   return 0;
 }
@@ -63,7 +63,7 @@ int uv_async_send(uv_async_t* handle) {
     return 0;
 
   if (cmpxchgi(&handle->pending, 0, 1) == 0)
-    uv__async_send(&handle->loop->async_watcher);
+    uv__async_send(&handle->hndl.loop->async_watcher);
 
   return 0;
 }
@@ -71,7 +71,7 @@ int uv_async_send(uv_async_t* handle) {
 
 void uv__async_close(uv_async_t* handle) {
   QUEUE_REMOVE(&handle->queue);
-  uv__handle_stop(handle);
+  uv__handle_stop(&handle->hndl);
 }
 
 

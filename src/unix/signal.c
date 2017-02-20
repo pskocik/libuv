@@ -122,7 +122,7 @@ static uv_signal_t* uv__signal_first_handle(int signum) {
   uv_signal_t* handle;
 
   lookup.signum = signum;
-  lookup.loop = NULL;
+  lookup.hndl.loop = NULL;
 
   handle = RB_NFIND(uv__signal_tree_s, &uv__signal_tree, &lookup);
 
@@ -159,7 +159,7 @@ static void uv__signal_handler(int signum) {
      * which case the user is out of luck.
      */
     do {
-      r = write(handle->loop->signal_pipefd[1], &msg, sizeof msg);
+      r = write(handle->hndl.loop->signal_pipefd[1], &msg, sizeof msg);
     } while (r == -1 && errno == EINTR);
 
     assert(r == sizeof msg ||
@@ -290,7 +290,7 @@ int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
   sigset_t saved_sigmask;
   int err;
 
-  assert(!(handle->flags & (UV_CLOSING | UV_CLOSED)));
+  assert(!(handle->hndl.flags & (UV_CLOSING | UV_CLOSED)));
 
   /* If the user supplies signum == 0, then return an error already. If the
    * signum is otherwise invalid then uv__signal_register will find out
@@ -334,7 +334,7 @@ int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
   uv__signal_unlock_and_unblock(&saved_sigmask);
 
   handle->signal_cb = signal_cb;
-  uv__handle_start(handle);
+  uv__handle_start(&handle->hndl);
 
   return 0;
 }
@@ -384,7 +384,7 @@ static void uv__signal_event(uv_loop_t* loop,
       handle = msg->handle;
 
       if (msg->signum == handle->signum) {
-        assert(!(handle->flags & UV_CLOSING));
+        assert(!(handle->hndl.flags & UV_CLOSING));
         handle->signal_cb(handle, handle->signum);
       }
 
@@ -394,7 +394,7 @@ static void uv__signal_event(uv_loop_t* loop,
        * yet dispatched, the uv__finish_close was deferred. Make close pending
        * now if this has happened.
        */
-      if ((handle->flags & UV_CLOSING) &&
+      if ((handle->hndl.flags & UV_CLOSING) &&
           (handle->caught_signals == handle->dispatched_signals)) {
         uv__make_close_pending((uv_handle_t*) handle);
       }
@@ -423,8 +423,8 @@ static int uv__signal_compare(uv_signal_t* w1, uv_signal_t* w2) {
   /* Sort by loop pointer, so we can easily look up the first item after
    * { .signum = x, .loop = NULL }.
    */
-  if (w1->loop < w2->loop) return -1;
-  if (w1->loop > w2->loop) return 1;
+  if (w1->hndl.loop < w2->hndl.loop) return -1;
+  if (w1->hndl.loop > w2->hndl.loop) return 1;
 
   if (w1 < w2) return -1;
   if (w1 > w2) return 1;
@@ -434,7 +434,7 @@ static int uv__signal_compare(uv_signal_t* w1, uv_signal_t* w2) {
 
 
 int uv_signal_stop(uv_signal_t* handle) {
-  assert(!(handle->flags & (UV_CLOSING | UV_CLOSED)));
+  assert(!(handle->hndl.flags & (UV_CLOSING | UV_CLOSED)));
   uv__signal_stop(handle);
   return 0;
 }
@@ -463,5 +463,5 @@ static void uv__signal_stop(uv_signal_t* handle) {
   uv__signal_unlock_and_unblock(&saved_sigmask);
 
   handle->signum = 0;
-  uv__handle_stop(handle);
+  uv__handle_stop(&handle->hndl);
 }

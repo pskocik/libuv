@@ -102,7 +102,7 @@ int uv_getnameinfo(uv_loop_t* loop,
 
   req->getnameinfo_cb = getnameinfo_cb;
   req->flags = flags;
-  req->type = UV_GETNAMEINFO;
+  req->rq.type = UV_GETNAMEINFO;
   req->loop = loop;
   req->retcode = 0;
 

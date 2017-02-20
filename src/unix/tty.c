@@ -195,7 +195,7 @@ int uv_tty_set_mode(uv_tty_t* tty, uv_tty_mode_t mode) {
   if (tty->mode == (int) mode)
     return 0;
 
-  fd = uv__stream_fd(tty);
+  fd = uv__stream_fd(&tty->strm);
   if (tty->mode == UV_TTY_MODE_NORMAL && mode != UV_TTY_MODE_NORMAL) {
     if (tcgetattr(fd, &tty->orig_termios))
       return -errno;
@@ -240,7 +240,7 @@ int uv_tty_get_winsize(uv_tty_t* tty, int* width, int* height) {
   int err;
 
   do
-    err = ioctl(uv__stream_fd(tty), TIOCGWINSZ, &ws);
+    err = ioctl(uv__stream_fd(&tty->strm), TIOCGWINSZ, &ws);
   while (err == -1 && errno == EINTR);
 
   if (err == -1)

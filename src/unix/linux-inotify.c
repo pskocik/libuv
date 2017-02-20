@@ -215,10 +215,10 @@ int uv_fs_event_start(uv_fs_event_t* handle,
   int err;
   int wd;
 
-  if (uv__is_active(handle))
+  if (uv__is_active(&handle->hndl))
     return -EINVAL;
 
-  err = init_inotify(handle->loop);
+  err = init_inotify(handle->hndl.loop);
   if (err)
     return err;
 
@@ -231,11 +231,11 @@ int uv_fs_event_start(uv_fs_event_t* handle,
          | UV__IN_MOVED_FROM
          | UV__IN_MOVED_TO;
 
-  wd = uv__inotify_add_watch(handle->loop->inotify_fd, path, events);
+  wd = uv__inotify_add_watch(handle->hndl.loop->inotify_fd, path, events);
   if (wd == -1)
     return -errno;
 
-  w = find_watcher(handle->loop, wd);
+  w = find_watcher(handle->hndl.loop, wd);
   if (w)
     goto no_insert;
 
@@ -247,10 +247,10 @@ int uv_fs_event_start(uv_fs_event_t* handle,
   w->path = strcpy((char*)(w + 1), path);
   QUEUE_INIT(&w->watchers);
   w->iterating = 0;
-  RB_INSERT(watcher_root, CAST(&handle->loop->inotify_watchers), w);
+  RB_INSERT(watcher_root, CAST(&handle->hndl.loop->inotify_watchers), w);
 
 no_insert:
-  uv__handle_start(handle);
+  uv__handle_start(&handle->hndl);
   QUEUE_INSERT_TAIL(&w->watchers, &handle->watchers);
   handle->path = w->path;
   handle->cb = cb;
@@ -263,18 +263,18 @@ no_insert:
 int uv_fs_event_stop(uv_fs_event_t* handle) {
   struct watcher_list* w;
 
-  if (!uv__is_active(handle))
+  if (!uv__is_active(&handle->hndl))
     return 0;
 
-  w = find_watcher(handle->loop, handle->wd);
+  w = find_watcher(handle->hndl.loop, handle->wd);
   assert(w != NULL);
 
   handle->wd = -1;
   handle->path = NULL;
-  uv__handle_stop(handle);
+  uv__handle_stop(&handle->hndl);
   QUEUE_REMOVE(&handle->watchers);
 
-  maybe_free_watcher_list(w, handle->loop);
+  maybe_free_watcher_list(w, handle->hndl.loop);
 
   return 0;
 }

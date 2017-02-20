@@ -71,8 +71,8 @@ int uv_loop_init(uv_loop_t* loop) {
   if (err)
     goto fail_signal_init;
 
-  uv__handle_unref(&loop->child_watcher);
-  loop->child_watcher.flags |= UV__HANDLE_INTERNAL;
+  uv__handle_unref(&loop->child_watcher.hndl);
+  loop->child_watcher.hndl.flags |= UV__HANDLE_INTERNAL;
   QUEUE_INIT(&loop->process_handles);
 
   err = uv_rwlock_init(&loop->cloexec_lock);
@@ -87,8 +87,8 @@ int uv_loop_init(uv_loop_t* loop) {
   if (err)
     goto fail_async_init;
 
-  uv__handle_unref(&loop->wq_async);
-  loop->wq_async.flags |= UV__HANDLE_INTERNAL;
+  uv__handle_unref(&loop->wq_async.hndl);
+  loop->wq_async.hndl.flags |= UV__HANDLE_INTERNAL;
 
   return 0;
 

@@ -44,6 +44,7 @@ extern "C" {
 #else
 # define UV_EXTERN /* nothing */
 #endif
+#define UV_struct(Nm,...) typedef struct Nm Nm; struct Nm __VA_ARGS__
 
 #include "uv-errno.h"
 #include "uv-version.h"
@@ -373,9 +374,9 @@ UV_EXTERN const char* uv_err_name(int err);
   UV_REQ_PRIVATE_FIELDS                                                       \
 
 /* Abstract base class of all requests. */
-struct uv_req_s {
+UV_struct(uv_req_s,{
   UV_REQ_FIELDS
-};
+});
 
 
 /* Platform-specific request types. */
@@ -387,7 +388,7 @@ UV_EXTERN int uv_shutdown(uv_shutdown_t* req,
                           uv_shutdown_cb cb);
 
 struct uv_shutdown_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_stream_t* handle;
   uv_shutdown_cb cb;
   UV_SHUTDOWN_PRIVATE_FIELDS
@@ -410,9 +411,9 @@ struct uv_shutdown_s {
   UV_HANDLE_PRIVATE_FIELDS                                                    \
 
 /* The abstract base class of all handles. */
-struct uv_handle_s {
+UV_struct(uv_handle_s,{
   UV_HANDLE_FIELDS
-};
+});
 
 UV_EXTERN size_t uv_handle_size(uv_handle_type type);
 UV_EXTERN size_t uv_req_size(uv_req_type type);
@@ -450,10 +451,10 @@ UV_EXTERN uv_buf_t uv_buf_init(char* base, unsigned int len);
  *
  * uv_stream_t is the parent class of uv_tcp_t, uv_pipe_t and uv_tty_t.
  */
-struct uv_stream_s {
-  UV_HANDLE_FIELDS
+UV_struct(uv_stream_s,{
+  uv_handle_s hndl;
   UV_STREAM_FIELDS
-};
+});
 
 UV_EXTERN int uv_listen(uv_stream_t* stream, int backlog, uv_connection_cb cb);
 UV_EXTERN int uv_accept(uv_stream_t* server, uv_stream_t* client);
@@ -480,7 +481,7 @@ UV_EXTERN int uv_try_write(uv_stream_t* handle,
 
 /* uv_write_t is a subclass of uv_req_t. */
 struct uv_write_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_write_cb cb;
   uv_stream_t* send_handle;
   uv_stream_t* handle;
@@ -501,11 +502,10 @@ UV_EXTERN int uv_is_closing(const uv_handle_t* handle);
  *
  * Represents a TCP stream or TCP server.
  */
-struct uv_tcp_s {
-  UV_HANDLE_FIELDS
-  UV_STREAM_FIELDS
+UV_struct(uv_tcp_s,{
+  uv_stream_s strm;
   UV_TCP_PRIVATE_FIELDS
-};
+});
 
 UV_EXTERN int uv_tcp_init(uv_loop_t*, uv_tcp_t* handle);
 UV_EXTERN int uv_tcp_init_ex(uv_loop_t*, uv_tcp_t* handle, unsigned int flags);
@@ -537,7 +537,7 @@ UV_EXTERN int uv_tcp_connect(uv_connect_t* req,
 
 /* uv_connect_t is a subclass of uv_req_t. */
 struct uv_connect_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_connect_cb cb;
   uv_stream_t* handle;
   UV_CONNECT_PRIVATE_FIELDS
@@ -575,8 +575,8 @@ typedef void (*uv_udp_recv_cb)(uv_udp_t* handle,
                                unsigned flags);
 
 /* uv_udp_t is a subclass of uv_handle_t. */
-struct uv_udp_s {
-  UV_HANDLE_FIELDS
+UV_struct(uv_udp_s,{
+  uv_handle_s hndl;
   /* read-only */
   /*
    * Number of bytes queued for sending. This field strictly shows how much
@@ -588,11 +588,11 @@ struct uv_udp_s {
    */
   size_t send_queue_count;
   UV_UDP_PRIVATE_FIELDS
-};
+});
 
 /* uv_udp_send_t is a subclass of uv_req_t. */
 struct uv_udp_send_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_udp_t* handle;
   uv_udp_send_cb cb;
   UV_UDP_SEND_PRIVATE_FIELDS
@@ -640,8 +640,7 @@ UV_EXTERN int uv_udp_recv_stop(uv_udp_t* handle);
  * Representing a stream for the console.
  */
 struct uv_tty_s {
-  UV_HANDLE_FIELDS
-  UV_STREAM_FIELDS
+  uv_stream_s strm;
   UV_TTY_PRIVATE_FIELDS
 };
 
@@ -678,8 +677,7 @@ UV_EXTERN uv_handle_type uv_guess_handle(uv_file file);
  * Pipe. On Unix this is a Unix domain socket.
  */
 struct uv_pipe_s {
-  UV_HANDLE_FIELDS
-  UV_STREAM_FIELDS
+  uv_stream_s strm;
   int ipc; /* non-zero if this pipe is used for passing handles */
   UV_PIPE_PRIVATE_FIELDS
 };
@@ -703,7 +701,7 @@ UV_EXTERN uv_handle_type uv_pipe_pending_type(uv_pipe_t* handle);
 
 
 struct uv_poll_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   uv_poll_cb poll_cb;
   UV_POLL_PRIVATE_FIELDS
 };
@@ -723,7 +721,7 @@ UV_EXTERN int uv_poll_stop(uv_poll_t* handle);
 
 
 struct uv_prepare_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   UV_PREPARE_PRIVATE_FIELDS
 };
 
@@ -733,7 +731,7 @@ UV_EXTERN int uv_prepare_stop(uv_prepare_t* prepare);
 
 
 struct uv_check_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   UV_CHECK_PRIVATE_FIELDS
 };
 
@@ -743,7 +741,7 @@ UV_EXTERN int uv_check_stop(uv_check_t* check);
 
 
 struct uv_idle_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   UV_IDLE_PRIVATE_FIELDS
 };
 
@@ -753,7 +751,7 @@ UV_EXTERN int uv_idle_stop(uv_idle_t* idle);
 
 
 struct uv_async_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   UV_ASYNC_PRIVATE_FIELDS
 };
 
@@ -769,7 +767,7 @@ UV_EXTERN int uv_async_send(uv_async_t* async);
  * Used to get woken up at a specified time in the future.
  */
 struct uv_timer_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   UV_TIMER_PRIVATE_FIELDS
 };
 
@@ -789,8 +787,8 @@ UV_EXTERN uint64_t uv_timer_get_repeat(const uv_timer_t* handle);
  *
  * Request object for uv_getaddrinfo.
  */
-struct uv_getaddrinfo_s {
-  UV_REQ_FIELDS
+struct uv_getaddrinfo_s{
+  uv_req_s rq;
   /* read-only */
   uv_loop_t* loop;
   /* struct addrinfo* addrinfo is marked as private, but it really isn't. */
@@ -813,7 +811,7 @@ UV_EXTERN void uv_freeaddrinfo(struct addrinfo* ai);
 * Request object for uv_getnameinfo.
 */
 struct uv_getnameinfo_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   /* read-only */
   uv_loop_t* loop;
   /* host and service are marked as private, but they really aren't. */
@@ -939,7 +937,7 @@ enum uv_process_flags {
  * uv_process_t is a subclass of uv_handle_t.
  */
 struct uv_process_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   uv_exit_cb exit_cb;
   int pid;
   UV_PROCESS_PRIVATE_FIELDS
@@ -956,7 +954,7 @@ UV_EXTERN int uv_kill(int pid, int signum);
  * uv_work_t is a subclass of uv_req_t.
  */
 struct uv_work_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_loop_t* loop;
   uv_work_cb work_cb;
   uv_after_work_cb after_work_cb;
@@ -1102,7 +1100,7 @@ typedef enum {
 
 /* uv_fs_t is a subclass of uv_req_t. */
 struct uv_fs_s {
-  UV_REQ_FIELDS
+  uv_req_s rq;
   uv_fs_type fs_type;
   uv_loop_t* loop;
   uv_fs_cb cb;
@@ -1279,7 +1277,7 @@ enum uv_fs_event {
 
 
 struct uv_fs_event_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   /* private */
   char* path;
   UV_FS_EVENT_PRIVATE_FIELDS
@@ -1290,7 +1288,7 @@ struct uv_fs_event_s {
  * uv_fs_stat() based polling file watcher.
  */
 struct uv_fs_poll_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   /* Private, don't touch. */
   void* poll_ctx;
 };
@@ -1307,7 +1305,7 @@ UV_EXTERN int uv_fs_poll_getpath(uv_fs_poll_t* handle,
 
 
 struct uv_signal_s {
-  UV_HANDLE_FIELDS
+  uv_handle_s hndl;
   uv_signal_cb signal_cb;
   int signum;
   UV_SIGNAL_PRIVATE_FIELDS

@@ -127,7 +127,7 @@ void uv__fs_scandir_cleanup(uv_fs_t* req);
 #define uv__req_unregister(loop, req)                                         \
   do {                                                                        \
     assert(uv__has_active_reqs(loop));                                        \
-    QUEUE_REMOVE(&(req)->active_queue);                                       \
+    QUEUE_REMOVE(&(req)->rq.active_queue);                                       \
   }                                                                           \
   while (0)
 

@@ -231,7 +231,7 @@ int uv_tcp_bind(uv_tcp_t* handle,
                 unsigned int flags) {
   unsigned int addrlen;
 
-  if (handle->type != UV_TCP)
+  if (handle->strm.hndl.type != UV_TCP)
     return UV_EINVAL;
 
   if (addr->sa_family == AF_INET)
@@ -250,7 +250,7 @@ int uv_udp_bind(uv_udp_t* handle,
                 unsigned int flags) {
   unsigned int addrlen;
 
-  if (handle->type != UV_UDP)
+  if (handle->hndl.type != UV_UDP)
     return UV_EINVAL;
 
   if (addr->sa_family == AF_INET)
@@ -270,7 +270,7 @@ int uv_tcp_connect(uv_connect_t* req,
                    uv_connect_cb cb) {
   unsigned int addrlen;
 
-  if (handle->type != UV_TCP)
+  if (handle->strm.hndl.type != UV_TCP)
     return UV_EINVAL;
 
   if (addr->sa_family == AF_INET)
@@ -292,7 +292,7 @@ int uv_udp_send(uv_udp_send_t* req,
                 uv_udp_send_cb send_cb) {
   unsigned int addrlen;
 
-  if (handle->type != UV_UDP)
+  if (handle->hndl.type != UV_UDP)
     return UV_EINVAL;
 
   if (addr->sa_family == AF_INET)
@@ -312,7 +312,7 @@ int uv_udp_try_send(uv_udp_t* handle,
                     const struct sockaddr* addr) {
   unsigned int addrlen;
 
-  if (handle->type != UV_UDP)
+  if (handle->hndl.type != UV_UDP)
     return UV_EINVAL;
 
   if (addr->sa_family == AF_INET)
@@ -329,7 +329,7 @@ int uv_udp_try_send(uv_udp_t* handle,
 int uv_udp_recv_start(uv_udp_t* handle,
                       uv_alloc_cb alloc_cb,
                       uv_udp_recv_cb recv_cb) {
-  if (handle->type != UV_UDP || alloc_cb == NULL || recv_cb == NULL)
+  if (handle->hndl.type != UV_UDP || alloc_cb == NULL || recv_cb == NULL)
     return UV_EINVAL;
   else
     return uv__udp_recv_start(handle, alloc_cb, recv_cb);
@@ -337,7 +337,7 @@ int uv_udp_recv_start(uv_udp_t* handle,
 
 
 int uv_udp_recv_stop(uv_udp_t* handle) {
-  if (handle->type != UV_UDP)
+  if (handle->hndl.type != UV_UDP)
     return UV_EINVAL;
   else
     return uv__udp_recv_stop(handle);
@@ -453,7 +453,7 @@ int uv_send_buffer_size(uv_handle_t* handle, int *value) {
 int uv_fs_event_getpath(uv_fs_event_t* handle, char* buffer, size_t* size) {
   size_t required_len;
 
-  if (!uv__is_active(handle)) {
+  if (!uv__is_active(&handle->hndl)) {
     *size = 0;
     return UV_EINVAL;
   }

@@ -32,8 +32,8 @@
 
 int uv_pipe_init(uv_loop_t* loop, uv_pipe_t* handle, int ipc) {
   uv__stream_init(loop, (uv_stream_t*)handle, UV_NAMED_PIPE);
-  handle->shutdown_req = NULL;
-  handle->connect_req = NULL;
+  handle->strm.shutdown_req = NULL;
+  handle->strm.connect_req = NULL;
   handle->pipe_fname = NULL;
   handle->ipc = ipc;
   return 0;
@@ -50,7 +50,7 @@ int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
   sockfd = -1;
 
   /* Already bound? */
-  if (uv__stream_fd(handle) >= 0)
+  if (uv__stream_fd(&handle->strm) >= 0)
     return -EINVAL;
 
   /* Make a copy of the file name, it outlives this function's scope. */
@@ -80,9 +80,9 @@ int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
   }
 
   /* Success. */
-  handle->flags |= UV_HANDLE_BOUND;
+  handle->strm.hndl.flags |= UV_HANDLE_BOUND;
   handle->pipe_fname = pipe_fname; /* Is a strdup'ed copy. */
-  handle->io_watcher.fd = sockfd;
+  handle->strm.io_watcher.fd = sockfd;
   return 0;
 
 err_bind:
@@ -95,7 +95,7 @@ err_socket:
 
 
 int uv_pipe_listen(uv_pipe_t* handle, int backlog, uv_connection_cb cb) {
-  if (uv__stream_fd(handle) == -1)
+  if (uv__stream_fd(&handle->strm) == -1)
     return -EINVAL;
 
 #if defined(__MVS__)
@@ -106,12 +106,12 @@ int uv_pipe_listen(uv_pipe_t* handle, int backlog, uv_connection_cb cb) {
     backlog = SOMAXCONN;
 #endif
 
-  if (listen(uv__stream_fd(handle), backlog))
+  if (listen(uv__stream_fd(&handle->strm), backlog))
     return -errno;
 
-  handle->connection_cb = cb;
-  handle->io_watcher.cb = uv__server_io;
-  uv__io_start(handle->loop, &handle->io_watcher, POLLIN);
+  handle->strm.connection_cb = cb;
+  handle->strm.io_watcher.cb = uv__server_io;
+  uv__io_start(handle->strm.hndl.loop, &handle->strm.io_watcher, POLLIN);
   return 0;
 }
 
@@ -141,12 +141,12 @@ int uv_pipe_open(uv_pipe_t* handle, uv_file fd) {
     return err;
 
 #if defined(__APPLE__)
-  err = uv__stream_try_select((uv_stream_t*) handle, &fd);
+  err = uv__stream_try_select(&handle->strm, &fd);
   if (err)
     return err;
 #endif /* defined(__APPLE__) */
 
-  return uv__stream_open((uv_stream_t*)handle,
+  return uv__stream_open(&handle->strm,
                          fd,
                          UV_STREAM_READABLE | UV_STREAM_WRITABLE);
 }
@@ -161,13 +161,13 @@ void uv_pipe_connect(uv_connect_t* req,
   int err;
   int r;
 
-  new_sock = (uv__stream_fd(handle) == -1);
+  new_sock = (uv__stream_fd(&handle->strm) == -1);
 
   if (new_sock) {
     err = uv__socket(AF_UNIX, SOCK_STREAM, 0);
     if (err < 0)
       goto out;
-    handle->io_watcher.fd = err;
+    handle->strm.io_watcher.fd = err;
   }
 
   memset(&saddr, 0, sizeof saddr);
@@ -176,7 +176,7 @@ void uv_pipe_connect(uv_connect_t* req,
   saddr.sun_family = AF_UNIX;
 
   do {
-    r = connect(uv__stream_fd(handle),
+    r = connect(uv__stream_fd(&handle->strm),
                 (struct sockaddr*)&saddr, sizeof saddr);
   }
   while (r == -1 && errno == EINTR);
@@ -188,26 +188,26 @@ void uv_pipe_connect(uv_connect_t* req,
 
   err = 0;
   if (new_sock) {
-    err = uv__stream_open((uv_stream_t*)handle,
-                          uv__stream_fd(handle),
+    err = uv__stream_open(&handle->strm,
+                          uv__stream_fd(&handle->strm),
                           UV_STREAM_READABLE | UV_STREAM_WRITABLE);
   }
 
   if (err == 0)
-    uv__io_start(handle->loop, &handle->io_watcher, POLLIN | POLLOUT);
+    uv__io_start(handle->strm.hndl.loop, &handle->strm.io_watcher, POLLIN | POLLOUT);
 
 out:
-  handle->delayed_error = err;
-  handle->connect_req = req;
+  handle->strm.delayed_error = err;
+  handle->strm.connect_req = req;
 
-  uv__req_init(handle->loop, req, UV_CONNECT);
+  uv__req_init(handle->strm.hndl.loop, req, UV_CONNECT);
   req->handle = (uv_stream_t*)handle;
   req->cb = cb;
   QUEUE_INIT(&req->queue);
 
   /* Force callback to run on next tick in case of error. */
   if (err)
-    uv__io_feed(handle->loop, &handle->io_watcher);
+    uv__io_feed(handle->strm.hndl.loop, &handle->strm.io_watcher);
 
 }
 
@@ -225,7 +225,7 @@ static int uv__pipe_getsockpeername(const uv_pipe_t* handle,
 
   addrlen = sizeof(sa);
   memset(&sa, 0, addrlen);
-  err = func(uv__stream_fd(handle), (struct sockaddr*) &sa, &addrlen);
+  err = func(uv__stream_fd(&handle->strm), (struct sockaddr*) &sa, &addrlen);
   if (err < 0) {
     *size = 0;
     return -errno;
@@ -276,13 +276,13 @@ int uv_pipe_pending_count(uv_pipe_t* handle) {
   if (!handle->ipc)
     return 0;
 
-  if (handle->accepted_fd == -1)
+  if (handle->strm.accepted_fd == -1)
     return 0;
 
-  if (handle->queued_fds == NULL)
+  if (handle->strm.queued_fds == NULL)
     return 1;
 
-  queued_fds = handle->queued_fds;
+  queued_fds = handle->strm.queued_fds;
   return queued_fds->offset + 1;
 }
 
@@ -291,8 +291,8 @@ uv_handle_type uv_pipe_pending_type(uv_pipe_t* handle) {
   if (!handle->ipc)
     return UV_UNKNOWN_HANDLE;
 
-  if (handle->accepted_fd == -1)
+  if (handle->strm.accepted_fd == -1)
     return UV_UNKNOWN_HANDLE;
   else
-    return uv__handle_type(handle->accepted_fd);
+    return uv__handle_type(handle->strm.accepted_fd);
 }

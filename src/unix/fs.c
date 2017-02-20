@@ -62,7 +62,7 @@
 
 #define INIT(subtype)                                                         \
   do {                                                                        \
-    req->type = UV_FS;                                                        \
+    req->rq.type = UV_FS;                                                     \
     if (cb != NULL)                                                           \
       uv__req_init(loop, req, UV_FS);                                         \
     req->fs_type = UV_FS_ ## subtype;                                         \

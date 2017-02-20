@@ -59,7 +59,7 @@ static void uv__chld(uv_signal_t* handle, int signum) {
   assert(signum == SIGCHLD);
 
   QUEUE_INIT(&pending);
-  loop = handle->loop;
+  loop = handle->hndl.loop;
 
   h = &loop->process_handles;
   q = QUEUE_HEAD(h);
@@ -93,7 +93,7 @@ static void uv__chld(uv_signal_t* handle, int signum) {
 
     QUEUE_REMOVE(&process->queue);
     QUEUE_INIT(&process->queue);
-    uv__handle_stop(process);
+    uv__handle_stop(&process->hndl);
 
     if (process->exit_cb == NULL)
       continue;
@@ -197,7 +197,7 @@ static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
 
   case UV_CREATE_PIPE:
     assert(container->data.stream != NULL);
-    if (container->data.stream->type != UV_NAMED_PIPE)
+    if (container->data.stream->hndl.type != UV_NAMED_PIPE)
       return -EINVAL;
     else
       return uv__make_socketpair(fds, 0);
@@ -238,7 +238,7 @@ static int uv__process_open_stream(uv_stdio_container_t* container,
   pipefds[1] = -1;
   uv__nonblock(pipefds[0], 1);
 
-  if (container->data.stream->type == UV_NAMED_PIPE &&
+  if (container->data.stream->hndl.type == UV_NAMED_PIPE &&
       ((uv_pipe_t*)container->data.stream)->ipc)
     flags = UV_STREAM_READABLE | UV_STREAM_WRITABLE;
   else if (writable)
@@ -514,7 +514,7 @@ int uv_spawn(uv_loop_t* loop,
   /* Only activate this handle if exec() happened successfully */
   if (exec_errorno == 0) {
     QUEUE_INSERT_TAIL(&loop->process_handles, &process->queue);
-    uv__handle_start(process);
+    uv__handle_start(&process->hndl);
   }
 
   process->pid = pid;
@@ -557,7 +557,7 @@ int uv_kill(int pid, int signum) {
 
 void uv__process_close(uv_process_t* handle) {
   QUEUE_REMOVE(&handle->queue);
-  uv__handle_stop(handle);
-  if (QUEUE_EMPTY(&handle->loop->process_handles))
-    uv_signal_stop(&handle->loop->child_watcher);
+  uv__handle_stop(&handle->hndl);
+  if (QUEUE_EMPTY(&handle->hndl.loop->process_handles))
+    uv_signal_stop(&handle->hndl.loop->child_watcher);
 }
